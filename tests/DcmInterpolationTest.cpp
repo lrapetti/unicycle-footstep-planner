@@ -107,7 +107,7 @@ bool configureInterpolator(FeetInterpolator& interpolator, const Configuration &
 
     ZMPDelta(0) = conf.ZMPDeltaX;
     ZMPDelta(1) = conf.ZMPDeltaY;
-    interpolator.setZMPDelta(ZMPDelta);
+    interpolator.setStanceZMPDelta(ZMPDelta, ZMPDelta);
 
     // REMOVE ME
     iDynTree::Vector2 leftZMPstance, rightZMPstance;

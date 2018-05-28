@@ -87,7 +87,6 @@ class FeetInterpolator {
 
     //DCM trajecectory generator
     DCMTrajectoryGenerator m_DCMTrajGenerator;
-    iDynTree::Vector2 m_ZMPDelta;
 
     bool orderSteps();
     bool createPhasesTimings(const double velocityAtMergePoint);
@@ -175,13 +174,6 @@ class FeetInterpolator {
     bool setInitialSwitchZMPDelta(const iDynTree::Vector2& offsetInLeftFootFrame, const iDynTree::Vector2& offsetInRightFootFrame); //it is the position the ZMP should have when the switch to the other foot begins.
 
     bool setCoMHeightSettings(double comHeight, double comHeightStanceDelta); //they are the nominal comHeight and a delta which is summed up during stance phase
-
-    /**
-     * Set the displacement of the ZMP w.r.t the center of the foot.
-     * this is only used by the DCM trajectory generator.
-     * @parm ZMPDelta is a vector containing the desired displacement of the ZMP w.r.t. the center of the foot expressed in the foot frame.
-     */
-    void setZMPDelta(const iDynTree::Vector2 &ZMPDelta);
 
     /**
      * Set the relative position of the merge point inside the double support phase.

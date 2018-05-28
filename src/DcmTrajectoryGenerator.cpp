@@ -251,9 +251,29 @@ bool DCMTrajectoryGenerator::setdT(const double &dT)
     return true;
 }
 
-void DCMTrajectoryGenerator::setZMPDelta(const iDynTree::Vector2 &ZMPDelta)
+void DCMTrajectoryGenerator::setZMPDelta(const iDynTree::Vector2 &leftZMPDelta,
+                                         const iDynTree::Vector2 &rightZMPDelta)
 {
-    m_ZMPDelta = ZMPDelta;
+    m_leftZMPDelta = leftZMPDelta;
+    m_rightZMPDelta = rightZMPDelta;
+}
+
+bool DCMTrajectoryGenerator::getZMPDelta(const StepList::const_iterator &footprint,
+                                         iDynTree::Vector2 &ZMPDelta) const
+{
+    if(footprint->footName == "left"){
+        ZMPDelta = m_leftZMPDelta;
+        return true;
+    }
+    else if(footprint->footName == "right"){
+        ZMPDelta = m_leftZMPDelta;
+        return true;
+    }
+    else{
+        std::cerr << "[DCM TRAJECTORY GENERATOR] The name of the footprint is neither left nor right. Does iCub have more legs?!"
+                  << std::endl;
+        return false;
+    }
 }
 
 bool DCMTrajectoryGenerator::addLastStep(const double &singleSupportStartTime,
@@ -426,7 +446,8 @@ bool DCMTrajectoryGenerator::addFirstDoubleSupportPhase(const DCMTrajectoryPoint
 
     if(!nextSingleSupport->getDCMVelocity(doubleSupportFinalBoundaryCondition.time,
                                           doubleSupportFinalBoundaryCondition.DCMVelocity)){
-        std::cerr << "[DCM TRAJECTORY GENERATOR] Error when the velocity of the DCM in the next SS phase is evaluated." <<std::endl;
+        std::cerr << "[DCM TRAJECTORY GENERATOR] Error when the velocity of the DCM in the next SS phase is evaluated."
+                  << std::endl;
         return false;
     }
 
@@ -447,8 +468,16 @@ bool DCMTrajectoryGenerator::addFirstDoubleSupportPhase(const DCMTrajectoryPoint
 
         iDynTree::Vector2 positionOfTheFirstSwingFoot;
         double yawAngle = firstSwingFoot->angle;
-        positionOfTheFirstSwingFoot(0) = firstSwingFoot->position(0) + cos(yawAngle) * m_ZMPDelta(0) - sin(yawAngle) * m_ZMPDelta(1);
-        positionOfTheFirstSwingFoot(1) = firstSwingFoot->position(1) + sin(yawAngle) * m_ZMPDelta(0) + cos(yawAngle) * m_ZMPDelta(1);
+
+        iDynTree::Vector2 ZMPDelta;
+        if(!getZMPDelta(firstSwingFoot, ZMPDelta)){
+            std::cerr << "[DCM TRAJECTORY GENERATOR] Unable to get the ZMP Delta."
+                      << std::endl;
+            return false;
+        }
+
+        positionOfTheFirstSwingFoot(0) = firstSwingFoot->position(0) + cos(yawAngle) * ZMPDelta(0) - sin(yawAngle) * ZMPDelta(1);
+        positionOfTheFirstSwingFoot(1) = firstSwingFoot->position(1) + sin(yawAngle) * ZMPDelta(0) + cos(yawAngle) * ZMPDelta(1);
 
         iDynTree::toEigen(doubleSupportStanceInitBoundaryCondition.DCMPosition) = (iDynTree::toEigen(positionOfTheFirstSwingFoot) + iDynTree::toEigen(nextSingleSupport->getZMP())) / 2;
         doubleSupportStanceInitBoundaryCondition.DCMVelocity.zero();
@@ -589,6 +618,7 @@ bool DCMTrajectoryGenerator::generateDCMTrajectory(const std::vector<StepList::c
     DCMTrajectoryPoint singleSupportBoundaryCondition;
     iDynTree::Vector2 lastZMP;
     iDynTree::Vector2 comPosition;
+    iDynTree::Vector2 ZMPDelta;
     double yawAngle;
 
     // evaluate times for the last step
@@ -598,25 +628,42 @@ bool DCMTrajectoryGenerator::generateDCMTrajectory(const std::vector<StepList::c
                        singleSupportBoundaryConditionTime);
 
     // the ZMP is shifted before evaluate the DCM
+    if(!getZMPDelta(m_orderedSteps.back(), ZMPDelta)){
+        std::cerr << "[DCM TRAJECTORY GENERATOR] Unable to get the ZMP Delta."
+                  << std::endl;
+        return false;
+    }
+
     yawAngle = m_orderedSteps.back()->angle;
-    lastZMP(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * m_ZMPDelta(0) - sin(yawAngle) * m_ZMPDelta(1);
-    lastZMP(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * m_ZMPDelta(0) + cos(yawAngle) * m_ZMPDelta(1);
+    lastZMP(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * ZMPDelta(0) - sin(yawAngle) * ZMPDelta(1);
+    lastZMP(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * ZMPDelta(0) + cos(yawAngle) * ZMPDelta(1);
     m_orderedSteps.pop_back();
 
     // evaluate the position of the Center of mass at the end of the trajectory
     iDynTree::Vector2 temp;
+    if(!getZMPDelta(m_orderedSteps.back(), ZMPDelta)){
+        std::cerr << "[DCM TRAJECTORY GENERATOR] Unable to get the ZMP Delta."
+                  << std::endl;
+        return false;
+    }
     yawAngle = m_orderedSteps.back()->angle;
-    temp(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * m_ZMPDelta(0) - sin(yawAngle) * m_ZMPDelta(1);
-    temp(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * m_ZMPDelta(0) + cos(yawAngle) * m_ZMPDelta(1);
+    temp(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * ZMPDelta(0) - sin(yawAngle) * ZMPDelta(1);
+    temp(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * ZMPDelta(0) + cos(yawAngle) * ZMPDelta(1);
     iDynTree::toEigen(comPosition)  = (iDynTree::toEigen(lastZMP) + iDynTree::toEigen(temp)) / 2;
 
     singleSupportBoundaryCondition.time = singleSupportBoundaryConditionTime;
     singleSupportBoundaryCondition.DCMPosition = comPosition;
     singleSupportBoundaryCondition.DCMVelocity.zero();
 
+    // the ZMP is shifted before evaluate the DCM
+    if(!getZMPDelta(m_orderedSteps.back(), ZMPDelta)){
+        std::cerr << "[DCM TRAJECTORY GENERATOR] Unable to get the ZMP Delta."
+                  << std::endl;
+        return false;
+    }
     yawAngle = m_orderedSteps.back()->angle;
-    lastZMP(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * m_ZMPDelta(0) - sin(yawAngle) * m_ZMPDelta(1);
-    lastZMP(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * m_ZMPDelta(0) + cos(yawAngle) * m_ZMPDelta(1);
+    lastZMP(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * ZMPDelta(0) - sin(yawAngle) * ZMPDelta(1);
+    lastZMP(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * ZMPDelta(0) + cos(yawAngle) * ZMPDelta(1);
     m_orderedSteps.pop_back();
 
     // evaluate the last step
@@ -630,9 +677,15 @@ bool DCMTrajectoryGenerator::generateDCMTrajectory(const std::vector<StepList::c
         getStepsTiming(singleSupportStartTime, singleSupportEndTime,
                        singleSupportBoundaryConditionTime);
 
+        // the ZMP is shifted before evaluate the DCM
+        if(!getZMPDelta(m_orderedSteps.back(), ZMPDelta)){
+            std::cerr << "[DCM TRAJECTORY GENERATOR] Unable to get the ZMP Delta."
+                      << std::endl;
+            return false;
+        }
         yawAngle = m_orderedSteps.back()->angle;
-        lastZMP(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * m_ZMPDelta(0) - sin(yawAngle) * m_ZMPDelta(1);
-        lastZMP(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * m_ZMPDelta(0) + cos(yawAngle) * m_ZMPDelta(1);
+        lastZMP(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * ZMPDelta(0) - sin(yawAngle) * ZMPDelta(1);
+        lastZMP(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * ZMPDelta(0) + cos(yawAngle) * ZMPDelta(1);
         m_orderedSteps.pop_back();
 
         // get the next Single Support trajectory

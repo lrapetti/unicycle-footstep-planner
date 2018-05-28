@@ -26,6 +26,8 @@ UnicycleTrajectoryGenerator::UnicycleTrajectoryGenerator()
     :m_left(std::make_shared<FootPrint>())
     ,m_right(std::make_shared<FootPrint>())
 {
+    m_left->setFootName("left");
+    m_right->setFootName("right");
 }
 
 bool UnicycleTrajectoryGenerator::generateAndInterpolate(std::shared_ptr<FootPrint> leftFoot, std::shared_ptr<FootPrint> rightFoot, double initTime, double dT,

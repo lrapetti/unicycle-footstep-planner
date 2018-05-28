@@ -1078,7 +1078,7 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
         return false;
     }
 
-    m_DCMTrajGenerator.setZMPDelta(m_ZMPDelta);
+    m_DCMTrajGenerator.setZMPDelta(m_leftStanceZMP, m_rightStanceZMP);
 
     if (!orderSteps()){
         std::cerr << "[FEETINTERPOLATOR] Failed while ordering the steps." << std::endl;
@@ -1137,12 +1137,12 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
         iDynTree::Vector2 leftFootPosition, rightFootPosition;
 
         double leftYawAngle = left.getSteps().front().angle;
-        leftFootPosition(0) = left.getSteps().front().position(0) + cos(leftYawAngle) * m_ZMPDelta(0) - sin(leftYawAngle) * m_ZMPDelta(1);
-        leftFootPosition(1) = left.getSteps().front().position(1) + sin(leftYawAngle) * m_ZMPDelta(0) + cos(leftYawAngle) * m_ZMPDelta(1);
+        leftFootPosition(0) = left.getSteps().front().position(0) + cos(leftYawAngle) * m_leftStanceZMP(0) - sin(leftYawAngle) * m_leftStanceZMP(1);
+        leftFootPosition(1) = left.getSteps().front().position(1) + sin(leftYawAngle) * m_leftStanceZMP(0) + cos(leftYawAngle) * m_leftStanceZMP(1);
 
         double rightYawAngle = right.getSteps().front().angle;
-        rightFootPosition(0) = right.getSteps().front().position(0) + cos(rightYawAngle) * m_ZMPDelta(0) - sin(rightYawAngle) * m_ZMPDelta(1);
-        rightFootPosition(1) = right.getSteps().front().position(1) + sin(rightYawAngle) * m_ZMPDelta(0) + cos(rightYawAngle) * m_ZMPDelta(1);
+        rightFootPosition(0) = right.getSteps().front().position(0) + cos(rightYawAngle) * m_rightStanceZMP(0) - sin(rightYawAngle) * m_rightStanceZMP(1);
+        rightFootPosition(1) = right.getSteps().front().position(1) + sin(rightYawAngle) * m_rightStanceZMP(0) + cos(rightYawAngle) * m_rightStanceZMP(1);
 
         iDynTree::toEigen(finalDCMPosition) = (iDynTree::toEigen(leftFootPosition) + iDynTree::toEigen(rightFootPosition)) / 2;
 
@@ -1188,8 +1188,8 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
     // the desired position of the DCM can be shifted on x and y position
     // note that this method is called only for the first steps in this particular case the
     // rotation matrix between the world frame and booth feet frames is the identity
-    iDynTree::toEigen(leftFootPosition) = iDynTree::toEigen(left.getSteps().front().position) + iDynTree::toEigen(m_ZMPDelta);
-    iDynTree::toEigen(rightFootPosition) = iDynTree::toEigen(right.getSteps().front().position) + iDynTree::toEigen(m_ZMPDelta);
+    iDynTree::toEigen(leftFootPosition) = iDynTree::toEigen(left.getSteps().front().position) + iDynTree::toEigen(m_leftStanceZMP);
+    iDynTree::toEigen(rightFootPosition) = iDynTree::toEigen(right.getSteps().front().position) + iDynTree::toEigen(m_rightStanceZMP);
 
     iDynTree::toEigen(DCMBoundaryConditionAtMergePoint.initialPosition) = (iDynTree::toEigen(leftFootPosition) + iDynTree::toEigen(rightFootPosition)) / 2;
 
@@ -1320,11 +1320,6 @@ bool FeetInterpolator::setMergePointRatio(const double &mergePointRatio)
     }
     m_mergePointRatio = mergePointRatio;
     return true;
-}
-
-void FeetInterpolator::setZMPDelta(const iDynTree::Vector2 &ZMPDelta)
-{
-    m_ZMPDelta = ZMPDelta;
 }
 
 void FeetInterpolator::useMinimumJerkFootTrajectory(const bool &useMinimumJerk)

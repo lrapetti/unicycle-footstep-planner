@@ -206,7 +206,8 @@ class DCMTrajectoryGenerator
 
     double m_dT; /**< Planner period. */
     double m_omega; /**< Time constant of the 3D-LIPM. */
-    iDynTree::Vector2 m_ZMPDelta; /**< Vector containing the desired ZMP shift. */
+    iDynTree::Vector2 m_leftZMPDelta; /**< Vector containing the desired left ZMP delta. */
+    iDynTree::Vector2 m_rightZMPDelta; /**< Vector containing the desired left ZMP delta. */
 
     double m_maxDoubleSupportDuration; /**< Max duration of a DS phase. */
     double m_nominalDoubleSupportDuration; /**< Nominal duration of a DS phase. */
@@ -322,10 +323,23 @@ class DCMTrajectoryGenerator
     bool setdT(const double &dT);
 
     /**
-     * Set the desired x and y displacement of the ZMP expressed on the foot frames
-     * @param ZMPDelta vector containing the desired ZMP displacement from the center of the foot
+     * Set the desired x and y displacements of the ZMP expressed on the foot frames.
+     * @param leftZMPDelta vector containing the desired ZMP displacement from the center
+     * of the left foot;
+     * @param rightZMPDelta vector containing the desired ZMP displacement from the center
+     * of the right foot.
      */
-    void setZMPDelta(const iDynTree::Vector2 &ZMPDelta);
+    void setZMPDelta(const iDynTree::Vector2 &leftZMPDelta,
+                     const iDynTree::Vector2 &rightZMPDelta);
+
+    /**
+     * Get the ZMP Delta.
+     * @param footprint ponter to the footprint;
+     * @param ZMPDelta left or right delta depending on the name of the footprint.
+     * @return true / galse in case of success /failure.
+     */
+    bool getZMPDelta(const StepList::const_iterator &footprint,
+                     iDynTree::Vector2 &ZMPDelta) const;
 
     /**
      * Set the pause condition.
