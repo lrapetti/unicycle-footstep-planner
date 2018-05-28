@@ -17,13 +17,14 @@ typedef struct{
     iDynTree::Vector2 position;
     double angle;
     double impactTime;
+    std::string footName{"footprint"};
 }Step;
 
 typedef std::deque<Step> StepList;
 
 class FootPrint {
     std::shared_ptr<StepList> m_steps;
-
+    std::string m_footName{"footprint"};
 public:
 
     FootPrint();
@@ -50,6 +51,17 @@ public:
 
     const StepList& getSteps() const;
 
+    /**
+     * Set the foot name
+     * @param footName name of the foot (e.g. left or right)
+     */
+    void setFootName(const std::string& footName);
+
+    /**
+     * Get the foot name
+     * @return the name of the foot (e.g. left or right)
+     */
+    const std::string& getFootName() const;
 };
 
 #endif // FOOTPRINT_H
