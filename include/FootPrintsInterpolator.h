@@ -85,6 +85,8 @@ class FeetInterpolator {
     //3D-LIPM constant time
     double m_omega;
 
+    double m_pitchDelta;
+
     //DCM trajecectory generator
     DCMTrajectoryGenerator m_DCMTrajGenerator;
 
@@ -166,6 +168,8 @@ class FeetInterpolator {
     bool setFootApexTime(double swingTimeRatio = 0.5);
 
     bool setFootLandingVelocity(double landingVelocity = 0.0);
+
+    bool setPitchDelta(double pitchAngle = 0.0); //DEGREES
 
     bool setPauseConditions(double maxStepTime, double nominalStepTime);
 
