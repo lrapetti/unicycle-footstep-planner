@@ -263,10 +263,12 @@ bool DCMTrajectoryGenerator::getZMPDelta(const StepList::const_iterator &footpri
 {
     if(footprint->footName == "left"){
         ZMPDelta = m_leftZMPDelta;
-        return true;
+	std::cerr<<"[zmp offset] " << ZMPDelta(0) << " " << ZMPDelta(1) <<"\n";
+	return true;
     }
     else if(footprint->footName == "right"){
-        ZMPDelta = m_leftZMPDelta;
+        ZMPDelta = m_rightZMPDelta;
+	std::cerr<<"[zmp offset] " << ZMPDelta(0) << " " << ZMPDelta(1) <<"\n";
         return true;
     }
     else{
