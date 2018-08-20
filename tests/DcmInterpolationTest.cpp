@@ -281,6 +281,8 @@ bool interpolationTest()
     std::shared_ptr<FootPrint> leftFoot, rightFoot;
     leftFoot = std::make_shared<FootPrint>();
     rightFoot = std::make_shared<FootPrint>();
+    leftFoot->setFootName("left");
+    rightFoot->setFootName("right");
 
     // set the initial and final desired position and velocity
     iDynTree::Vector2 initPosition, initVelocity, finalPosition, finalVelocity;
