@@ -60,6 +60,7 @@ class FeetInterpolator {
     double m_switchPercentage, m_dT, m_endSwitch, m_initTime, m_stepHeight, m_swingApex, m_landingVelocity;
     std::vector<iDynTree::Transform> m_leftTrajectory, m_rightTrajectory;
     std::vector<iDynTree::Twist> m_leftTwist, m_rightTwist;
+    std::vector<iDynTree::Twist> m_leftAcceleration, m_rightAcceleration;
     bool m_useMinimumJerkFootTrajectory;
 
     //ZMP related variables
@@ -96,7 +97,9 @@ class FeetInterpolator {
     void fillLeftFixedVector();
     bool interpolateFoot(const std::vector<StepPhase> &stepPhase, const FootPrint &foot,
                          std::vector<iDynTree::Transform> &positionOutput,
-                         std::vector<iDynTree::Twist> &velocityOutput);
+                         std::vector<iDynTree::Twist> &velocityOutput,
+                         std::vector<iDynTree::Twist> &accelerationOutput);
+
     bool computeFootWeightPortion(const std::vector<StepPhase> &stepPhase, const InitialState &alpha0,
                                   std::vector<double> &output, std::vector<double> &outputVelocity,
                                   std::vector<double> &outputAcceleration); //the i-th element in output is in [0,1]
@@ -119,7 +122,8 @@ class FeetInterpolator {
                      const double &t,
                      const double &trajectoryDuration,
                      double &positionOutput,
-                     double &velocityOutput);
+                     double &velocityOutput,
+                     double &accelerationOutput);
 
  public:
     FeetInterpolator();
@@ -201,6 +205,8 @@ class FeetInterpolator {
     void getFeetTrajectories(std::vector<iDynTree::Transform>& lFootTrajectory, std::vector<iDynTree::Transform>& rFootTrajectory) const;
 
     void getFeetTwist(std::vector<iDynTree::Twist> &lFootTwist, std::vector<iDynTree::Twist> &rFootTwist) const;
+
+    void getFeetAcceleration(std::vector<iDynTree::Twist> &lFootAcceleration, std::vector<iDynTree::Twist> &rFootAcceleration) const;
 
     void getWeightPercentage(std::vector<double>& weightInLeft, std::vector<double>& weightInRight) const;
 
