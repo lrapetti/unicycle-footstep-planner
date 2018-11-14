@@ -736,7 +736,7 @@ iDynTree::Vector2 DCMTrajectoryGenerator::evaluateZMPPosition(const iDynTree::Ve
 
 bool DCMTrajectoryGenerator::evaluateDCMTrajectory()
 {
-    size_t timeVectorLength = std::get<1>(m_trajectoryDomain) - std::get<0>(m_trajectoryDomain) + 1;
+    size_t timeVectorLength = std::get<1>(m_trajectoryDomain) - std::get<0>(m_trajectoryDomain);
 
     // clear all the previous DCM position
     m_DCMPosition.clear();
