@@ -726,6 +726,14 @@ bool DCMTrajectoryGenerator::generateDCMTrajectory(const std::vector<StepList::c
     return true;
 }
 
+iDynTree::Vector2 DCMTrajectoryGenerator::evaluateZMPPosition(const iDynTree::Vector2 &DCMPosition,
+                                                              const iDynTree::Vector2 &DCMVelocity)
+{
+    iDynTree::Vector2 ZMP;
+    iDynTree::toEigen(ZMP) = iDynTree::toEigen(DCMPosition) - iDynTree::toEigen(DCMVelocity) / m_omega;
+    return ZMP;
+}
+
 bool DCMTrajectoryGenerator::evaluateDCMTrajectory()
 {
     size_t timeVectorLength = std::get<1>(m_trajectoryDomain) - std::get<0>(m_trajectoryDomain) + 1;
@@ -737,6 +745,9 @@ bool DCMTrajectoryGenerator::evaluateDCMTrajectory()
     // clear all the previous DCM velocity
     m_DCMVelocity.clear();
     m_DCMVelocity.reserve(timeVectorLength);
+
+    m_ZMPPosition.clear();
+    m_ZMPPosition.reserve(timeVectorLength);
 
     iDynTree::Vector2 DCMPosition, DCMVelocity;
     double time;
@@ -760,6 +771,7 @@ bool DCMTrajectoryGenerator::evaluateDCMTrajectory()
         }
         m_DCMPosition.push_back(DCMPosition);
         m_DCMVelocity.push_back(DCMVelocity);
+        m_ZMPPosition.push_back(evaluateZMPPosition(DCMPosition, DCMVelocity));
     }
     return true;
 }
@@ -772,6 +784,11 @@ const std::vector<iDynTree::Vector2>& DCMTrajectoryGenerator::getDCMPosition() c
 const std::vector<iDynTree::Vector2>& DCMTrajectoryGenerator::getDCMVelocity() const
 {
     return m_DCMVelocity;
+}
+
+const std::vector<iDynTree::Vector2>& DCMTrajectoryGenerator::getZMPPosition() const
+{
+    return m_ZMPPosition;
 }
 
 bool DCMTrajectoryGenerator::setPauseConditions(const double &maxDoubleSupportDuration, const double &nominalDoubleSupportDuration)

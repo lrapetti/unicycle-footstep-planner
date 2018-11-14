@@ -220,6 +220,7 @@ class DCMTrajectoryGenerator
     std::vector<size_t> m_phaseShift; /**< Vector containing the index when a change of phase (SS -> DS and viceversa) occours. */
     std::vector<iDynTree::Vector2> m_DCMPosition; /**< Vector containing the position of the DCM. */
     std::vector<iDynTree::Vector2> m_DCMVelocity; /**< Vector containing the velocity of the DCM. */
+    std::vector<iDynTree::Vector2> m_ZMPPosition; /**< Vector containing the position of the ZMP. */
 
     /**
      * Evaluate the timings for the last step.
@@ -288,6 +289,15 @@ class DCMTrajectoryGenerator
     bool addFirstDoubleSupportPhase(const DCMTrajectoryPoint &doubleSupportInitBoundaryCondition,
                                     const StepList::const_iterator &firstSwingFoot);
 
+
+    /**
+     * Evaluate the ZMP position using the DCM Position and Velocity
+     * @param DCMPosition position of the DCM;
+     * @param DCMVelocity velocity of the DCM;
+     * @return position of the ZMP
+     */
+    iDynTree::Vector2 evaluateZMPPosition(const iDynTree::Vector2 &DCMPosition,
+                                          const iDynTree::Vector2 &DCMVelocity);
     /**
      * Evaluate the DCM position for all time.
      * @return true / false in case of success / failure.
@@ -391,6 +401,12 @@ class DCMTrajectoryGenerator
      * @return a vector containing the DCM velocity during all the trajectory domain.
      */
     const std::vector<iDynTree::Vector2>& getDCMVelocity() const;
+
+    /**
+     * Get the position of the ZMP
+     * @return a vector containing the DCM velocity during all the trajectory domain.
+     */
+    const std::vector<iDynTree::Vector2>& getZMPPosition() const;
 };
 
 #endif
