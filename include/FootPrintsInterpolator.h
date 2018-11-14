@@ -161,6 +161,13 @@ class FeetInterpolator {
     bool interpolateDCM(const FootPrint &left, const FootPrint &right, double initTime, double dT,
                         const DCMInitialState &DCMBoundaryConditionAtMergePoint);
 
+
+    /**
+     * Compute the weight on each foot
+     * @param ZMPPosition position of the ZMP
+     */
+    void computeFeetWeight(const std::vector<iDynTree::Vector2>& ZMPPosition);
+
     //Settings
 
     bool setSwitchOverSwingRatio(double ratio); //indeed the swing time cannot be null, while the switch time can be very close to zero (but not zero)

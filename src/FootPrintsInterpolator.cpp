@@ -1199,7 +1199,67 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
             return false;
         }
     }
+
+    // compute the weight on each foot
+    computeFeetWeight(m_DCMTrajGenerator.getZMPPosition());
+
     return true;
+}
+
+void FeetInterpolator::computeFeetWeight(const std::vector<iDynTree::Vector2>& ZMPPosition)
+{
+    // clear old vectors
+    m_weightInLeft.clear();
+    m_weightInLeft.reserve(ZMPPosition.size());
+
+    m_weightInRight.clear();
+    m_weightInRight.reserve(ZMPPosition.size());
+
+    Eigen::Vector2d feetDistance;
+    Eigen::Vector2d ZMPDistanceFromLeftFoot;
+
+    iDynTree::Position leftFootZMPOffset;
+    iDynTree::Position rightFootZMPOffset;
+
+    for(int i = 0; i < ZMPPosition.size(); i++){
+        // if the left foot is in stance phase the right foot is in swing
+        if(m_lFootPhases->at(i) == StepPhase::Stance){
+            m_weightInLeft.push_back(0);
+            m_weightInRight.push_back(1);
+        }
+        else if(m_lFootPhases->at(i) == StepPhase::Swing){
+            m_weightInLeft.push_back(1);
+            m_weightInRight.push_back(0);
+        }
+        else{
+            leftFootZMPOffset(0) = m_leftStanceZMP(0);
+            leftFootZMPOffset(1) = m_leftStanceZMP(1);
+            leftFootZMPOffset(2) = 0;
+
+            rightFootZMPOffset(0) = m_rightStanceZMP(0);
+            rightFootZMPOffset(1) = m_rightStanceZMP(1);
+            rightFootZMPOffset(2) = 0;
+
+            Eigen::Vector3d positionOfTheLeftFoot;
+            Eigen::Vector3d positionOfTheRightFoot;
+
+            positionOfTheLeftFoot = iDynTree::toEigen(m_leftTrajectory[i].getPosition())
+                + iDynTree::toEigen(m_leftTrajectory[i].getRotation() * leftFootZMPOffset);
+
+            positionOfTheRightFoot = iDynTree::toEigen(m_rightTrajectory[i].getPosition())
+                + iDynTree::toEigen(m_rightTrajectory[i].getRotation() * rightFootZMPOffset);
+
+            // take only x and y
+            feetDistance[0] = positionOfTheRightFoot(0) - positionOfTheLeftFoot(0);
+            feetDistance[1] = positionOfTheRightFoot(1) - positionOfTheLeftFoot(1);
+
+            ZMPDistanceFromLeftFoot[0] = ZMPPosition[i](0) - positionOfTheLeftFoot(0);
+            ZMPDistanceFromLeftFoot[1] = ZMPPosition[i](1) - positionOfTheLeftFoot(1);
+
+            m_weightInLeft.push_back(ZMPDistanceFromLeftFoot.norm() / feetDistance.norm());
+            m_weightInRight.push_back(1 - ZMPDistanceFromLeftFoot.norm() / feetDistance.norm());
+        }
+    }
 }
 
 const std::vector<iDynTree::Vector2>& FeetInterpolator::getDCMPosition() const
