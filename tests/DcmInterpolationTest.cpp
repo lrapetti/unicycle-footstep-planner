@@ -30,7 +30,6 @@ typedef struct
     // Unicycle quantities
     double unicycleGain = 10.0, referencePointDistanceX = 0.1, referencePointDistanceY = 0;
     double timeWeight = 2.5, positionWeight = 1;
-    double ZMPDeltaX = 0, ZMPDeltaY = 0;
 
     // Bounds
     // Step length
@@ -105,11 +104,6 @@ bool configureInterpolator(FeetInterpolator& interpolator, const Configuration &
     ok = ok && interpolator.setPauseConditions(conf.maxStepDuration, conf.nominalDuration);
     ok = ok && interpolator.setCoMHeightSettings(conf.comHeight, conf.comHeightDelta);
 
-    ZMPDelta(0) = conf.ZMPDeltaX;
-    ZMPDelta(1) = conf.ZMPDeltaY;
-    interpolator.setStanceZMPDelta(ZMPDelta, ZMPDelta);
-
-    // REMOVE ME
     iDynTree::Vector2 leftZMPstance, rightZMPstance;
     leftZMPstance(0) = conf.lStancePositionX;
     leftZMPstance(1) = conf.lStancePositionY;
@@ -138,13 +132,15 @@ void printTrajectories(const FeetInterpolator& interpolator, size_t& newMergePoi
                        const std::string& pLFileName, const std::string& pRFileName,
                        const std::string& heightFileName, const std::string& heightAccFileName,
                        const std::string& DCMPosFileName, const std::string& DCMVelFileName,
-                       const std::string& mergePointFileName)
+                       const std::string& mergePointFileName,
+                       const std::string& lFootWeightFileName, const std::string& rFootWeightFileName)
 {
     // instantiate ofstream
     std::ofstream posLeftStream, posRightStream;
     std::ofstream heightStream, heightAccelerationStream;
     std::ofstream DCMPosStream, DCMVelStream;
     std::ofstream mergePointsStream;
+    std::ofstream lFootWeightStream, rFootWeightStream;
 
     // open files
     posLeftStream.open(pLFileName.c_str());
@@ -157,6 +153,9 @@ void printTrajectories(const FeetInterpolator& interpolator, size_t& newMergePoi
     DCMVelStream.open(DCMVelFileName.c_str());
 
     mergePointsStream.open(mergePointFileName.c_str());
+
+    lFootWeightStream.open(lFootWeightFileName.c_str());
+    rFootWeightStream.open(rFootWeightFileName.c_str());
 
     // print feet trajectories
     static std::vector<iDynTree::Transform> lFootTrajectory, rFootTrajectory;
@@ -240,6 +239,21 @@ void printTrajectories(const FeetInterpolator& interpolator, size_t& newMergePoi
     DCMVelStream << "DCM_vx DCM_vy" <<std::endl;
     print_iDynTree(DCMVelVector, DCMVelStream);
 
+    static std::vector < double > lFootWeight;
+    std::vector < double > lFootWeightIn;
+    static std::vector < double > rFootWeight;
+    std::vector < double > rFootWeightIn;
+
+    interpolator.getWeightPercentage(lFootWeightIn, rFootWeightIn);
+
+    lFootWeight.insert(lFootWeight.begin() + mergePoint, lFootWeightIn.begin(), lFootWeightIn.end());
+    rFootWeight.insert(rFootWeight.begin() + mergePoint, rFootWeightIn.begin(), rFootWeightIn.end());
+    lFootWeight.resize(mergePoint + lFootWeightIn.size());
+    rFootWeight.resize(mergePoint + rFootWeightIn.size());
+
+    printVector(lFootWeight, lFootWeightStream);
+    printVector(rFootWeight, rFootWeightStream);
+
     // evaluate the the new DCM boundary conditions
     boundaryConditionAtMergePoint.initialPosition = DCMPosInput[mergePoints[1]];
     boundaryConditionAtMergePoint.initialVelocity = DCMVelInput[mergePoints[1]];
@@ -257,6 +271,10 @@ void printTrajectories(const FeetInterpolator& interpolator, size_t& newMergePoi
     DCMVelStream.close();
 
     mergePointsStream.close();
+
+    lFootWeightStream.close();
+    rFootWeightStream.close();
+
 }
 
 
@@ -324,6 +342,8 @@ bool interpolationTest()
     std::string DCMPosFileName("DCMPos1.txt");
     std::string DCMVelFileName("DCMVel1.txt");
     std::string mergePointsFileName("mergePoints1.txt");
+    std::string lFootWeightFileName("leftFootWeight1.txt");
+    std::string rFootWeightFileName("rightFootWeight1.txt");
 
     // print footsteep in the files
     printSteps(leftFoot->getSteps(), rightFoot->getSteps(),
@@ -335,8 +355,8 @@ bool interpolationTest()
                       pLFileName,  pRFileName,
                       heightFileName,  heightAccFileName,
                       DCMPosFileName, DCMVelFileName,
-                      mergePointsFileName);
-
+                      mergePointsFileName,
+                      lFootWeightFileName, rFootWeightFileName);
 
     // test merge points
     initTime = (newMergePoint)*conf.dT;
@@ -370,6 +390,8 @@ bool interpolationTest()
     DCMPosFileName = "DCMPos2.txt";
     DCMVelFileName = "DCMVel2.txt";
     mergePointsFileName = "mergePoints2.txt";
+    lFootWeightFileName = "leftFootWeight2.txt";
+    rFootWeightFileName = "rightFootWeight2.txt";
 
     printSteps(leftFoot->getSteps(), rightFoot->getSteps(),
                footstepsLFileName, footstepsRFileName);
@@ -378,7 +400,8 @@ bool interpolationTest()
                       pLFileName,  pRFileName,
                       heightFileName,  heightAccFileName,
                       DCMPosFileName, DCMVelFileName,
-                      mergePointsFileName);
+                      mergePointsFileName,
+                      lFootWeightFileName, rFootWeightFileName);
 
     // test merge points
     initTime = newMergePoint*conf.dT;
@@ -412,6 +435,8 @@ bool interpolationTest()
     DCMPosFileName = "DCMPos3.txt";
     DCMVelFileName = "DCMVel3.txt";
     mergePointsFileName = "mergePoints3.txt";
+    lFootWeightFileName = "leftFootWeight3.txt";
+    rFootWeightFileName = "rightFootWeight3.txt";
 
     printSteps(leftFoot->getSteps(), rightFoot->getSteps(),
                footstepsLFileName, footstepsRFileName);
@@ -420,7 +445,8 @@ bool interpolationTest()
                       pLFileName,  pRFileName,
                       heightFileName,  heightAccFileName,
                       DCMPosFileName, DCMVelFileName,
-                      mergePointsFileName);
+                      mergePointsFileName,
+                      lFootWeightFileName, rFootWeightFileName);
 
     return true;
 }
